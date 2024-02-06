@@ -1,6 +1,6 @@
 // Copyright 2023 QMK
 // SPDX-License-Identifier: GPL-2.0-or-later
-
+#include "quantum.h"
 #include QMK_KEYBOARD_H
 
 enum layer{
@@ -15,31 +15,45 @@ enum custom_keycodes {
   COL_QA,
   CTL_U,
   CTL_D,
-  CTL_CURLY,
-  VI_WILD
+  VI_WILD,
+  KC_ESC_LNG2
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-    case VI_SP:
-      if (record->event.pressed) {SEND_STRING("vi ");}
-    case COL_Q:
-      if (record->event.pressed) {SEND_STRING(":q\n");}
-    case COL_QA:
-      if (record->event.pressed) {SEND_STRING(":qa\n");}
-    case CTL_U:
-      if (record->event.pressed) {SEND_STRING(SS_LCTL("u"));}
-    case CTL_D:
-      if (record->event.pressed) {SEND_STRING(SS_LCTL("d"));}
-    case CTL_CURLY:
-      if (record->event.pressed) {SEND_STRING(SS_LCTL("}"));}
-    case VI_WILD:
-      if (record->event.pressed) {SEND_STRING("vi -p ./**/*.*pp");}
-      return false;
-      break;
-  }
-  return true;
+    if (!record->event.pressed) {
+        return true; // 押されていない場合は処理を続行
+    }
+
+    switch (keycode) {
+        case KC_ESC_LNG2:
+            tap_code(KC_ESC);
+            tap_code(KC_LNG2);
+            return false; // ここで処理を終了
+        case VI_SP:
+            SEND_STRING("vi ");
+            return false;
+        case COL_Q:
+            SEND_STRING(":q\n");
+            return false;
+        case COL_QA:
+            SEND_STRING(":qa\n");
+            return false;
+        case CTL_U:
+            SEND_STRING(SS_LCTL("u"));
+            return false;
+        case CTL_D:
+            SEND_STRING(SS_LCTL("d"));
+            return false;
+        case VI_WILD:
+            SEND_STRING("vi -p ./*/*.?pp\n");  // エンターキーを追加
+            return false;
+        default:
+            return true; // カスタムキーコード以外の場合は処理を続行
+    }
+
+    return false; // カスタムキーコードの処理が完了したら、それ以上の処理を停止
 }
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*
@@ -60,16 +74,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 //        LT(HEX, KC_P0),   LT(FUNC, KC_PDOT), LT(ADJ, KC_PENT), KC_PPLS
 //    ),
     [HEX] = LAYOUT_ortho_4x4_with_2encoder(
-        KC_P4,               KC_P5,      KC_P6,     KC_NO,      KC_NO,
-        KC_ESC,              COL_Q,      KC_NO,     KC_DEL,      KC_NO,
+        KC_NO,               KC_NO,      KC_NO,     KC_NO,      KC_NO,
+        KC_ESC_LNG2,         COL_Q,      KC_PAST,     KC_BSPC,      KC_NO,
         KC_TAB,              VI_SP,      KC_UP,     KC_ENT,
         LT(FUNC, KC_P0),  KC_LEFT,    KC_DOWN,   KC_RIGHT
     ),
     [FUNC] = LAYOUT_ortho_4x4_with_2encoder(
-        KC_F7,   KC_F8,   KC_F9,   KC_F10,      KC_NO,
-        KC_F4,   KC_F5,   KC_F6,   KC_F11,      KC_NO,
-        KC_F1,   VI_WILD,   KC_F3,   KC_F12,
-        KC_P0,   KC_PDOT, KC_PENT, KC_PPLS
+        _______,   _______,   _______,   _______,      _______,
+        _______,   COL_QA,   _______,   _______,   _______,
+        _______,   VI_WILD, CTL_U,   _______,
+        KC_P0,   KC_PDOT, CTL_D, KC_PPLS
     )
 };
 
@@ -78,8 +92,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 //    [TENKEY] =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_MOD, RGB_RMOD)  },
-    [HEX]  =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_VAD, RGB_VAI)  },
-    [FUNC]  =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_SAD, RGB_SAI)  },
+//    [HEX]   =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_MOD, RGB_RMOD)  },
+    [HEX]  =   {ENCODER_CCW_CW(RGB_VAD, RGB_VAI), ENCODER_CCW_CW(KC_DOWN, KC_UP)},
+    [FUNC] =   {ENCODER_CCW_CW(RGB_MOD, RGB_RMOD), ENCODER_CCW_CW(RGB_VAD, RGB_VAI)},
 };
 #endif
 

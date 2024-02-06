@@ -3,7 +3,7 @@
 
 #pragma once
 
-#define ENCODER_MAP_ENABLE
+#define MK_3_SPEED
 
 /*
  * Feature disable options
