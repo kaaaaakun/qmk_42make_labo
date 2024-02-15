@@ -15,10 +15,13 @@ enum custom_keycodes {
   COL_QA,
   COL_N,
   COL_L_N,
+  CMD_TAB,
   CTL_U,
   CTL_D,
   VI_WILD,
-  KC_ESC_LNG2
+  KC_ESC_LNG2,
+  COM_OPT_RIGHT,
+  COM_OPT_LEFT
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -52,8 +55,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CTL_D:
             SEND_STRING(SS_LCTL("d"));
             return false;
+        case CMD_TAB:
+            SEND_STRING(SS_LGUI(SS_TAP(X_TAB)));
+            return false;
         case VI_WILD:
             SEND_STRING("vi -p ./**/*.[ch]??\n");  // エンターキーを追加
+            return false;
+        case COM_OPT_RIGHT:
+            register_code(KC_LCMD);
+            register_code(KC_LALT);
+            tap_code(KC_RIGHT);
+            unregister_code(KC_LCMD);
+            unregister_code(KC_LALT);
+            break;
+            return false;
+        case COM_OPT_LEFT:
+            register_code(KC_LCMD);
+            register_code(KC_LALT);
+            tap_code(KC_LEFT);
+            unregister_code(KC_LCMD);
+            unregister_code(KC_LALT);
+            break;
             return false;
         default:
             return true; // カスタムキーコード以外の場合は処理を続行
@@ -82,16 +104,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 //        LT(HEX, KC_P0),   LT(FUNC, KC_PDOT), LT(ADJ, KC_PENT), KC_PPLS
 //    ),
     [HEX] = LAYOUT_ortho_4x4_with_2encoder(
-        KC_NO,               KC_NO,      KC_NO,     KC_NO,      KC_NO,
         KC_ESC_LNG2,         COL_Q,      KC_PAST,   KC_BSPC,    KC_NO,
-        KC_TAB,              VI_SP,      KC_UP,     KC_ENT,
-        LT(FUNC, KC_P0),     KC_LEFT,    KC_DOWN,   KC_RIGHT
+        KC_TAB,              VI_SP,      KC_UP,     KC_ENT,     KC_NO,
+        LT(FUNC,KC_LCMD),    KC_LEFT,    KC_DOWN,   KC_RIGHT,
+        KC_NO,               KC_NO,      KC_NO,     KC_NO
     ),
     [FUNC] = LAYOUT_ortho_4x4_with_2encoder(
-        _______,   _______,  _______,   _______,      _______,
         _______,   COL_QA,   _______,   _______,   _______,
-        _______,   VI_WILD,  CTL_U,     _______,
-        KC_P0,     COL_L_N,    CTL_D,     COL_N
+        CMD_TAB,   VI_WILD,  CTL_U,     _______,   _______,
+        _______,   COL_L_N,  CTL_D,     COL_N,
+        _______,   _______,  _______,   _______
     )
 };
 
@@ -101,7 +123,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 //    [TENKEY] =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_MOD, RGB_RMOD)  },
 //    [HEX]   =   { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(RGB_MOD, RGB_RMOD)  },
-    [HEX]  =   {ENCODER_CCW_CW(RGB_VAD, RGB_VAI), ENCODER_CCW_CW(KC_DOWN, KC_UP)},
+    [HEX]  =   {ENCODER_CCW_CW(COM_OPT_LEFT, COM_OPT_RIGHT), ENCODER_CCW_CW(KC_DOWN, KC_UP)},
     [FUNC] =   {ENCODER_CCW_CW(RGB_MOD, RGB_RMOD), ENCODER_CCW_CW(RGB_VAD, RGB_VAI)},
 };
 #endif
